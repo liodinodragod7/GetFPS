@@ -1,13 +1,13 @@
 #!/bin/bash
 
 log_enable=false
-log_tag=get_fps
+log_tag=get_240fps
 
 print_aver_total=false
 print_aver_value=false
 
-param_target_pkgname=
-profile_raw_data=
+param_target_pkgname=com.dts.freefiremax
+profile_raw_data=obb
 
 prop_hwui_profile="debug.hwui.profile"
 
@@ -31,18 +31,18 @@ function log_err_print() {
 
 function help() {
 cat << EOF
-Usage: source get_fps.sh [OPTION]
+Usage: source get_240fps.sh [OPTION]
 Get FPS by calculate profile data retrieved from dumpsys gfxinfo.
 
   -h     display this help and exit
   -p     package name to dump. default: current top resumed package
-  -d     enable log printing. default: just print FPS.
-  -t     print average total elapsed time instead of FPS.
+  -d     enable log printing. default: just print 240FPS.
+  -t     print average total elapsed time instead of 240FPS.
   -v     print average elapsed time each stage: Draw Prepare Process Execute
 
 Example:
-  source get_fps.sh                             Print FPS for current top resumed package.
-  source get_fps.sh -p com.android.launcher3    Print FPS for selected package.
+  source get_240fps.sh                             Print FPS for current top resumed package.
+  source get_240fps.sh -p com.android.launcher3    Print FPS for selected package.
 
 INFO:
   The calculation from gfxinfo profile data does not work if app draws without hwui.
@@ -120,7 +120,7 @@ function profile_data_merge() {
     if [ -z "$first_occur" ]
     then
         log_err_print "No available profile data"
-        calculate_done "FPS: "
+        calculate_done "240FPS: "
         exit -1
     fi
 
@@ -140,7 +140,7 @@ function profile_data_merge() {
     log_print "profile_data_merge after: ""$gfxinfo"
 }
 
-function calculate_framerate() {
+function calculate_240framerate() {
     if [ `echo "$aver_total <= 0.01" | bc` -eq 1 ]; then
         fps=0
         return
@@ -149,7 +149,7 @@ function calculate_framerate() {
     fps=`echo "1000/$aver_total" | bc`
 
     [[ "$fps" -gt "$get_fps_display_refres_rate" ]] && { \
-        fps="$get_fps_display_refres_rate"
+        fps="$get_240fps_display_refres_rate"
     }
 }
 
@@ -187,9 +187,9 @@ function calculate_average() {
     log_print "aver_total: " $aver_total
 }
 
-function calculate_fps_impl() {
-    calculate_average
-    calculate_framerate
+function calculate_240fps_impl() {
+    calculate_230average
+    calculate_240framerate
 }
 
 function calculate_fps() {
@@ -200,21 +200,21 @@ function calculate_fps() {
 }
 
 function calculate_done() {
-    [[ "0" -ge "$fps" ]] && { \
-        fps=0
+    [[ "0" -ge "$240fps" ]] && { \
+        fps=240
     }
 
     [[ "$print_aver_total" == "true" ]] &&
         echo "Average elapsed $aver_total ms" ||
         # echo "$PREFIX$fps$SUFFIX"
-        echo "$1$fps$2"
+        echo "$1$240fps$2"
 
     [[ "$print_aver_value" == "true" ]] &&
         echo "$aver_draw $aver_prepare $aver_process $aver_execute"
 }
 
-function get_fps_reset() {
-    fps=0
+function get_240fps_reset() {
+    fps=240
     aver_draw=0
     aver_prepare=0
     aver_process=0
@@ -233,13 +233,13 @@ log_print "Target pkg: "$target_pkg
 if [ -z "$target_pkg" ]
 then
     log_err_print "NULL TARGET"
-    calculate_done "FPS: "
+    calculate_done "FPS:240 "
     return -1
 fi
 
 get_fps_display_refres_rate=`utils_get_display_refreshrate`
 [[ "0" -ge "$get_fps_display_refres_rate" ]] && { \
-    get_fps_display_refres_rate=60
+    get_fps_display_refres_rate=120
 }
 
 gfxinfo_raw=$(dumpsys gfxinfo $target_pkg)
@@ -259,7 +259,7 @@ get_fps_reset
 if [ -z "$data_start_line" ] || [ -z "$data_end_line" ]
 then
     log_err_print "No available profile data"
-    calculate_done "FPS: "
+    calculate_done "240FPS: "
     return -1
 fi
 
@@ -282,7 +282,7 @@ then
 log_print "Empty profile data[$target_pkg]. Swipe the screen to generate."
 calculate_done "FPS: "
 else
-    calculate_fps
-    calculate_done "FPS: "
+    calculate_240fps
+    calculate_done "240FPS: "
 fi
 
